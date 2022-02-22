@@ -5,10 +5,22 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
 inputs:
-  title-regex:
-    description: 'Title regex to match'
+  ticket-regex:
+    description: 'Ticket regex to match'
     required: true
-    default: '^\[PROJECT-\d*\]\ '
+  ticket-body-prefix:
+    description: 'Ticket body prefix to replace'
+    required: true
+    default: 'JIRA Ticket:'
+  github-token:
+    description: 'Github token'
+    required: true
+  atlassian-token:
+    description: 'Atlassian token'
+    required: true
+  atlassian-domain:
+    description: 'Your atlassian domain'
+    required: true
 branding:
   icon: 'edit-3'
   color: 'blue'

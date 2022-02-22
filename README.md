@@ -20,7 +20,7 @@ jobs:
   pr-lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: seferov/pr-lint-action@master
+    - uses: odedlaz/pr-ensure-jira@master
       with:
         title-regex: '^\[PROJECT-\d*\](\ )'
         title-regex-flags: 'g' # optional
@@ -32,7 +32,7 @@ In this example, for every pull request the title is expected to match `^\[PROJE
 ## Auto-close
 
 It can be configured to close pull request automatically if the title does not match the pattern provided. To do so, `github-token` and `auto-close-message` options must be configured.
-In the message, `%pattern%` is replaced with the actual the pattern provided. Here is an [example pull request](https://github.com/seferov/pr-lint-action/pull/25).
+In the message, `%pattern%` is replaced with the actual the pattern provided. Here is an [example pull request](https://github.com/odedlaz/pr-ensure-jira/pull/25).
 
 Config:
 
@@ -47,7 +47,7 @@ jobs:
   pr-lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: seferov/pr-lint-action@master
+    - uses: odedlaz/pr-ensure-jira@master
       with:
         title-regex: '^\[PROJECT-\d*\](\ )'
 +       github-token: ${{ secrets.GITHUB_TOKEN }}
