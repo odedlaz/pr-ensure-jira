@@ -8,6 +8,9 @@ inputs:
   ticket-regex:
     description: 'Ticket regex to match'
     required: true
+  branch-name-regex:
+    description: 'branch name regex to match'
+    required: false
   github-token:
     description: 'Github token'
     required: true

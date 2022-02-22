@@ -20,7 +20,7 @@ async function run() {
       core.setFailed("The PR title is missing a JIRA ticket");
       return;
     }
- 
+
     core.info(`The PR title matches!`);
 
     if (!match.groups || !match.groups['ticket']) {
@@ -46,6 +46,28 @@ async function run() {
     }
     core.info(`JIRA ticket ${ticket} found`);
 
+    const branchNameRegexText = core.getInput('branch-name-regex')
+    if (branchNameRegexText) {
+      const branchNameRegex = RegExp(branchNameRegexText, "g"),
+        branchName = github.context!.ref,
+        m = branchNameRegex.exec(branchName);
+
+      core.info(`Verifying branch name ${branchName} conforms to regex: ${branchNameRegex.source}`);
+      if (!m || !m.groups || !m.groups['ticket']) {
+        core.error(`branch name ${branchName} doesn't conform to regex: ${branchNameRegex}`);
+        core.setFailed("The ticket key is missing from branch name");
+        return;
+      }
+
+      core.info(`Done. Verifying branch ticket and PR ticket names are identical...`);
+      const branchTicket = m.groups['ticket'];
+      if (branchTicket != ticket) {
+        core.error(`branch ticket name ${branchTicket} != title ticket name ${ticket}`);
+        core.setFailed("ticket from branch name != ticket from PR title");
+        return;
+      }
+    }
+
     const client: github.GitHub = new github.GitHub(githubToken);
     const pr = github.context.issue;
 
@@ -54,7 +76,7 @@ async function run() {
       core.debug(`PR body already contains ${ticket} url`);
       return;
     }
-    
+
 
     core.info(`JIRA ticket ${ticket} exists in PR body, replacing with URL`);
     const newBody = body.replace(ticket, ticketRef);
