@@ -8,10 +8,6 @@ inputs:
   ticket-regex:
     description: 'Ticket regex to match'
     required: true
-  ticket-body-prefix:
-    description: 'Ticket body prefix to replace'
-    required: true
-    default: 'JIRA Ticket:'
   github-token:
     description: 'Github token'
     required: true
