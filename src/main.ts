@@ -73,7 +73,7 @@ async function run() {
 
       core.info(`Done. Verifying branch ticket and PR ticket names are identical...`);
       const branchTicket = m.groups['ticket'];
-      if (branchTicket != ticket) {
+      if (branchTicket.toUpperCase() != ticket.toUpperCase()) {
         core.error(`branch ticket name ${branchTicket} != title ticket name ${ticket}`);
         core.setFailed("ticket from branch name != ticket from PR title");
         return;
