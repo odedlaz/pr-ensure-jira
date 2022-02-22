@@ -3,6 +3,18 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import fetch from 'node-fetch';
 
+function getBranchName(): string {
+  const head_ref = process.env.GITHUB_HEAD_REF;
+  if (head_ref && github.context!.eventName === 'pull_request') {
+      return head_ref;
+  }
+
+  // Other events where we have to extract branch from the ref
+  // Ref example: refs/heads/master, refs/tags/X
+  const branchParts = github.context!.ref.split('/');
+  return branchParts.slice(2).join('/');
+}
+
 async function run() {
   try {
     const
@@ -49,7 +61,7 @@ async function run() {
     const branchNameRegexText = core.getInput('branch-name-regex')
     if (branchNameRegexText) {
       const branchNameRegex = RegExp(branchNameRegexText, "g"),
-        branchName = github.context!.ref,
+        branchName = getBranchName(),
         m = branchNameRegex.exec(branchName);
 
       core.info(`Verifying branch name ${branchName} conforms to regex: ${branchNameRegex.source}`);
