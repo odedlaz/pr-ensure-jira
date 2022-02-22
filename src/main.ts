@@ -90,13 +90,13 @@ async function run() {
     }
 
 
-    core.info(`JIRA ticket ${ticket} exists in PR body, replacing with URL`);
     const newBody = body.replace(ticket, ticketRef);
     if (newBody == body) {
       // body hasn't changed, no need to issue an update
       return;
     }
-
+    
+    core.info(`JIRA ticket ${ticket} exists in PR body, replacing with URL`);
     client.pulls.update({
       owner: pr.owner,
       repo: pr.repo,
