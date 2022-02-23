@@ -1,16 +1,24 @@
-name: 'PR Lint GitHub Action'
-description: 'PR Lint for GitHub Actions'
+name: 'JIRA PR Verification GitHub Action'
+description: 'JIRA Pull Request Verification for GitHub Actions'
 author: 'Farhad Safarov'
 runs:
   using: 'docker'
   image: 'Dockerfile'
 inputs:
-  ticket-regex:
-    description: 'Ticket regex to match'
+  title-regex:
+    description: 'Title regex to match, should contain a <tickets> group'
     required: true
-  branch-name-regex:
-    description: 'branch name regex to match'
+  title-ticket-delimiter:
+    description: "Ticket delimiter in pull request title"
     required: false
+    default: ','
+  branch-name-regex:
+    description: 'branch name regex to match, should contain a <tickets> group'
+    required: true
+  branch-name-ticket-delimiter:
+    description: "ticket delimiter in branch name"
+    required: false
+    default: '/'
   github-token:
     description: 'Github token'
     required: true
