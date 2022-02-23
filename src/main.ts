@@ -17,14 +17,14 @@ function getBranchName(): string {
 }
 
 function getTicketsFrom(text: string, regex: RegExp, delimiter: string): Set<string> {
-  core.info(`Checking "${regex.source}" with "${regex.flags}" flags against the PR title: "${text}"`);
+  core.info(`Matching regex "${regex.source}" with "${regex.flags}" flags against: "${text}"`);
   const match = regex.exec(text)
   if (!match) {
     throw new Error(`Regex "${regex.source}" with "${regex.flags}" flags doesn't match: "${text}"`);
   }
 
   if (!match.groups || !match.groups[TICKETS_NAMED_GROUP]) {
-    throw new Error(`The tickets key is missing from ${regex.source}`);
+    throw new Error(`The tickets key (${TICKETS_NAMED_GROUP}) is missing from ${regex.source}`);
   }
 
   return new Set(match.groups[TICKETS_NAMED_GROUP].split(delimiter).map(x => x.toUpperCase()));
