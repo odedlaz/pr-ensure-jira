@@ -94,8 +94,8 @@ async function run() {
       newBody = replaceRawTicketWithHyperlink(newBody, ticket, atlassianDomain);
     }
 
-    if (newBody != originalBody) {
-      core.debug("PR body hasn't changed, nothing else to do... url");
+    if (newBody == originalBody) {
+      core.debug("PR body hasn't changed, nothing else to do...");
       return;
     }
 
