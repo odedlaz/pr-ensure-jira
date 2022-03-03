@@ -4,6 +4,18 @@ import * as github from '@actions/github';
 import fetch from 'node-fetch';
 const TICKETS_NAMED_GROUP = "tickets"
 
+class CommentableError extends Error {
+  /**
+   *
+   */
+  comment: string
+  constructor(message: string, comment: string) {
+    super(message);
+    this.comment = comment;
+  }
+
+}
+
 function getBranchName(): string {
   const head_ref = process.env.GITHUB_HEAD_REF;
   if (head_ref && github.context!.eventName === 'pull_request') {
@@ -16,11 +28,12 @@ function getBranchName(): string {
   return branchParts.slice(2).join('/');
 }
 
-function getTicketsFrom(text: string, regex: RegExp, delimiter: string): Set<string> {
+function getTicketsFrom(text: string, regex: RegExp, delimiter: string, errorComment?: string): Set<string> {
   core.info(`Matching regex "${regex.source}" with "${regex.flags}" flags against: "${text}"`);
   const match = regex.exec(text)
   if (!match) {
-    throw new Error(`Regex "${regex.source}" with "${regex.flags}" flags doesn't match: "${text}"`);
+    const msg = `Regex "${regex.source}" with "${regex.flags}" flags doesn't match: "${text}"`;
+    throw (errorComment ? new CommentableError(msg, errorComment.replace("%text%", `${text}`)) : new Error(msg));
   }
 
   if (!match.groups || !match.groups[TICKETS_NAMED_GROUP]) {
@@ -63,21 +76,26 @@ function replaceRawTicketWithHyperlink(body: string, ticket: string, atlassianDo
 }
 
 async function run() {
+  const githubToken = core.getInput('github-token', { required: true });
+  const client: github.GitHub = new github.GitHub(githubToken);
+  const pr = github.context.issue;
+
   try {
     const
-      githubToken = core.getInput('github-token', { required: true }),
       atlassianToken = core.getInput('atlassian-token', { required: true }),
       atlassianDomain = core.getInput('atlassian-domain', { required: true }),
       titleRegex = new RegExp(core.getInput('title-regex', { required: true }), 'g'),
+      titleComment = core.getInput('title-comment', { required: true }),
       branchNameRegex = new RegExp(core.getInput('branch-name-regex', { required: true }), 'g'),
+      branchNameComment = core.getInput('branch-name-comment', { required: true }),
       titleTicketDelimeter = core.getInput('title-ticket-delimiter', { required: true }),
       branchNameTicketDelimeter = core.getInput('branch-name-ticket-delimiter', { required: true });
 
     core.info("Extracting JIRA tickets from title...");
-    const titleTickets = getTicketsFrom(github.context!.payload!.pull_request!.title, titleRegex, titleTicketDelimeter);
+    const titleTickets = getTicketsFrom(github.context!.payload!.pull_request!.title, titleRegex, titleTicketDelimeter, titleComment);
 
     core.info("Extracting JIRA tickets from branch name...");
-    const branchTickets = getTicketsFrom(getBranchName(), branchNameRegex, branchNameTicketDelimeter);
+    const branchTickets = getTicketsFrom(getBranchName(), branchNameRegex, branchNameTicketDelimeter, branchNameComment);
 
     core.info("Verifying branch tickets and PR ticket are identical...");
     if ([...titleTickets].filter(ticket => !branchTickets.has(ticket)).length > 0 ||
@@ -99,9 +117,6 @@ async function run() {
       return;
     }
 
-    const client: github.GitHub = new github.GitHub(githubToken);
-    const pr = github.context.issue;
-
     client.pulls.update({
       owner: pr.owner,
       repo: pr.repo,
@@ -109,6 +124,15 @@ async function run() {
       body: newBody
     });
   } catch (error) {
+    if (error instanceof CommentableError) {
+      client.pulls.createReview({
+        owner: pr.owner,
+        repo: pr.repo,
+        pull_number: pr.number,
+        body: (error as CommentableError).comment,
+        event: 'COMMENT'
+      });
+    }
     core.setFailed((error as Error).message);
   }
 }
