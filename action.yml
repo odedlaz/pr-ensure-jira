@@ -10,7 +10,7 @@ inputs:
     required: true
   title-comment:
     description: "A comment to write when regex doesn't match. %text% is replaced with the title."
-    required: true
+    required: false
   title-ticket-delimiter:
     description: "Ticket delimiter in pull request title"
     required: false
@@ -20,7 +20,7 @@ inputs:
     required: true
   branch-name-comment:
     description: "A comment to write when regex doesn't match. %text% is replaced with the branch name."
-    required: true
+    required: false
   branch-name-ticket-delimiter:
     description: "ticket delimiter in branch name"
     required: false

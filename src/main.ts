@@ -85,9 +85,9 @@ async function run() {
       atlassianToken = core.getInput('atlassian-token', { required: true }),
       atlassianDomain = core.getInput('atlassian-domain', { required: true }),
       titleRegex = new RegExp(core.getInput('title-regex', { required: true }), 'g'),
-      titleComment = core.getInput('title-comment', { required: true }),
+      titleComment = core.getInput('title-comment', { required: false }),
       branchNameRegex = new RegExp(core.getInput('branch-name-regex', { required: true }), 'g'),
-      branchNameComment = core.getInput('branch-name-comment', { required: true }),
+      branchNameComment = core.getInput('branch-name-comment', { required: false }),
       titleTicketDelimeter = core.getInput('title-ticket-delimiter', { required: true }),
       branchNameTicketDelimeter = core.getInput('branch-name-ticket-delimiter', { required: true });
 
