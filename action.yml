@@ -15,6 +15,10 @@ inputs:
     description: "Ticket delimiter in pull request title"
     required: false
     default: ','
+  body-ticket-prefix:
+    description: "Body ticket prefix"
+    required: false
+    default: 'JIRA Ticket:'
   branch-name-regex:
     description: 'branch name regex to match, should contain a <tickets> group'
     required: true

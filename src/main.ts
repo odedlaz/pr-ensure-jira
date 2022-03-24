@@ -64,15 +64,16 @@ async function verifyTicketExistsInJIRA(ticket: string, atlassianDomain: string,
   throw new Error(`Unhandled response from atlassian: ${await response.text()}`);
 }
 
-function replaceRawTicketWithHyperlink(body: string, ticket: string, atlassianDomain: string) {
-  const ticketRef = `[${ticket}](https://${atlassianDomain}/browse/${ticket})`;
-  if (body.includes(ticketRef)) {
-    core.debug(`PR body already contains ${ticket} url`);
-    return body;
+function verifyTicketExistBody(body: string, ticket: string) {
+  const prefix = core.getInput('body-ticket-prefix', { required: false });
+  if (!body.includes(prefix)) {
+    return;
   }
 
-  core.info(`JIRA ticket ${ticket} exists in PR body, replacing with URL (if applicable)...`);
-  return body.replace(ticket, ticketRef);
+  const text = `${prefix} ${ticket.toUpperCase()}`;
+  if (!body.includes(text)) {
+    throw new Error(`PR body deosn't contain: "${text}"`);
+  }
 }
 
 async function run() {
@@ -103,26 +104,14 @@ async function run() {
       throw new Error(`branch tickets (${Array.from(branchTickets).join(",")}) != title tickets (${Array.from(titleTickets).join(",")})`);
     }
 
-    const originalBody = github.context!.payload!.pull_request!.body ?? "";
-    let newBody = originalBody;
+    const body = github.context!.payload!.pull_request!.body ?? "";
 
     for (let ticket of titleTickets) {
       core.info(`Verifying that ticket ${ticket} exists in JIRA`);
       await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
-      newBody = replaceRawTicketWithHyperlink(newBody, ticket, atlassianDomain);
+      verifyTicketExistBody(body,ticket.toUpperCase());
     }
 
-    if (newBody == originalBody) {
-      core.debug("PR body hasn't changed, nothing else to do...");
-      return;
-    }
-
-    client.pulls.update({
-      owner: pr.owner,
-      repo: pr.repo,
-      pull_number: pr.number,
-      body: newBody
-    });
   } catch (error) {
     if (error instanceof CommentableError) {
       client.pulls.createReview({
