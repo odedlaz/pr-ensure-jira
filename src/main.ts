@@ -5,9 +5,6 @@ import fetch from 'node-fetch';
 const TICKETS_NAMED_GROUP = "tickets"
 
 class CommentableError extends Error {
-  /**
-   *
-   */
   comment: string
   constructor(message: string, comment: string) {
     super(message);
@@ -104,12 +101,14 @@ async function run() {
       throw new Error(`branch tickets (${Array.from(branchTickets).join(",")}) != title tickets (${Array.from(titleTickets).join(",")})`);
     }
 
-    const body = github.context!.payload!.pull_request!.body ?? "";
+    const body : string = github.context!.payload!.pull_request!.body ?? "";
 
     for (let ticket of titleTickets) {
       core.info(`Verifying that ticket ${ticket} exists in JIRA`);
       await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
-      verifyTicketExistBody(body,ticket.toUpperCase());
+      if (body.trim() === "") {
+        verifyTicketExistBody(body,ticket.toUpperCase());
+      }
     }
 
   } catch (error) {
