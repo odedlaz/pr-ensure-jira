@@ -1,6 +1,6 @@
 {
   "name": "pr-ensure-jira",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "PR Lint for GitHub Actions",
   "main": "lib/main.js",
   "scripts": {

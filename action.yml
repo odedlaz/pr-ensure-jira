@@ -11,10 +11,6 @@ inputs:
   title-comment:
     description: "A comment to write when regex doesn't match. %text% is replaced with the title."
     required: false
-  title-ticket-delimiter:
-    description: "Ticket delimiter in pull request title"
-    required: false
-    default: ','
   body-ticket-prefix:
     description: "Body ticket prefix"
     required: false
@@ -25,10 +21,6 @@ inputs:
   branch-name-comment:
     description: "A comment to write when regex doesn't match. %text% is replaced with the branch name."
     required: false
-  branch-name-ticket-delimiter:
-    description: "ticket delimiter in branch name"
-    required: false
-    default: '/'
   github-token:
     description: 'Github token'
     required: true
