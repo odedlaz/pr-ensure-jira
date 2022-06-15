@@ -136,12 +136,14 @@ async function run(
         `branch ticket (${branchTicket}) != title ticket (${ticket})`
       );
     }
-
-    const body: string = github.context!.payload!.pull_request!.body ?? '';
-
+    
     core.info(`Verifying that ticket ${ticket} exists in JIRA`);
     await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
+
+    core.info(`Verifying that ticket ${ticket} exists in ticket body`);
+    const body: string = github.context!.payload!.pull_request!.body ?? '';
     verifyTicketExistBody(body, ticket.toUpperCase());
+    
   } catch (error) {
     core.setFailed((error as Error).message);
     if (error instanceof CommentableError) {
