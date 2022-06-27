@@ -3,18 +3,6 @@ import * as github from '@actions/github';
 import fetch from 'node-fetch';
 const TICKET_NAMED_GROUP = 'ticket';
 
-function getBranchName(): string {
-  const head_ref = process.env.GITHUB_HEAD_REF;
-  if (head_ref && github.context!.eventName === 'pull_request') {
-    return head_ref;
-  }
-
-  // Other events where we have to extract branch from the ref
-  // Ref example: refs/heads/master, refs/tags/X
-  const branchParts = github.context!.ref.split('/');
-  return branchParts.slice(2).join('/');
-}
-
 function getTicketFrom(text: string, regex: RegExp, errorCode: string): string {
   core.info(
     `Matching regex "${regex.source}" with "${regex.flags}" flags against: "${text}"`
@@ -101,17 +89,19 @@ async function run(
   branchNameRegex: RegExp
 ) {
   try {
+    const pr = github.context!.payload!.pull_request;
+    if (!pr) {
+      core.error('this action only works for pull requests');
+      return;
+    }
+
     core.info('Extracting JIRA tickets from title...');
-    const ticket = getTicketFrom(
-      github.context!.payload!.pull_request!.title,
-      titleRegex,
-      'invalid-title'
-    );
+    const ticket = getTicketFrom(pr.title, titleRegex, 'invalid-title');
     core.setOutput('ticket', ticket);
 
     core.info('Extracting JIRA tickets from branch name...');
     const branchTicket = getTicketFrom(
-      getBranchName(),
+      pr.head.ref,
       branchNameRegex,
       'invalid-branch-name'
     );
