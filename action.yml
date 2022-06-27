@@ -8,21 +8,12 @@ inputs:
   title-regex:
     description: 'Title regex to match, should contain a <tickets> group'
     required: true
-  title-comment:
-    description: "A comment to write when regex doesn't match. %text% is replaced with the title."
-    required: false
   body-ticket-prefix:
     description: "Body ticket prefix"
     required: false
     default: 'JIRA Ticket:'
   branch-name-regex:
     description: 'branch name regex to match, should contain a <tickets> group'
-    required: true
-  branch-name-comment:
-    description: "A comment to write when regex doesn't match. %text% is replaced with the branch name."
-    required: false
-  github-token:
-    description: 'Github token'
     required: true
   atlassian-token:
     description: 'Atlassian token'

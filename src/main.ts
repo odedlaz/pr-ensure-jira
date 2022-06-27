@@ -3,14 +3,6 @@ import * as github from '@actions/github';
 import fetch from 'node-fetch';
 const TICKET_NAMED_GROUP = 'ticket';
 
-class CommentableError extends Error {
-  comment: string;
-  constructor(message: string, comment: string) {
-    super(message);
-    this.comment = comment;
-  }
-}
-
 function getBranchName(): string {
   const head_ref = process.env.GITHUB_HEAD_REF;
   if (head_ref && github.context!.eventName === 'pull_request') {
@@ -23,20 +15,22 @@ function getBranchName(): string {
   return branchParts.slice(2).join('/');
 }
 
-function getTicketFrom(text: string, regex: RegExp, errorComment?: string): string {
+function getTicketFrom(text: string, regex: RegExp, errorCode: string): string {
   core.info(
     `Matching regex "${regex.source}" with "${regex.flags}" flags against: "${text}"`
   );
   const match = regex.exec(text);
   if (!match) {
     const msg = `Regex "${regex.source}" with "${regex.flags}" flags doesn't match: "${text}"`;
-    throw errorComment
-      ? new CommentableError(msg, errorComment.replace('%text%', `${text}`))
-      : new Error(msg);
+    core.setOutput('error', errorCode);
+    throw new Error(msg);
   }
 
   if (!match.groups || !match.groups[TICKET_NAMED_GROUP]) {
-    throw new Error(`The tickets key (${TICKET_NAMED_GROUP}) is missing from ${regex.source}`);
+    core.setOutput('error', errorCode);
+    throw new Error(
+      `The tickets key (${TICKET_NAMED_GROUP}) is missing from ${regex.source}`
+    );
   }
 
   return match.groups[TICKET_NAMED_GROUP].toUpperCase();
@@ -66,6 +60,7 @@ async function verifyTicketExistsInJIRA(
   }
 
   if (response.status == 404) {
+    core.setOutput('error', 'unknown-jira-ticket');
     throw new Error(`Unknown JIRA ticket: ${ticket}`);
   }
 
@@ -82,81 +77,61 @@ function verifyTicketExistBody(body: string, ticket: string) {
 
   const text = `${prefix} ${ticket.toUpperCase()}`;
   if (!body.includes(text)) {
+    core.setOutput('error', 'ticket-missing-in-body');
     throw new Error(`PR body deosn't contain: "${text}"`);
   }
 }
-async function runAction() {
-  const atlassianToken = core.getInput('atlassian-token', {required: true}),
-    atlassianDomain = core.getInput('atlassian-domain', {required: true}),
-    titleRegex = new RegExp(core.getInput('title-regex', {required: true}), 'g'),
-    titleComment = core.getInput('title-comment', {required: false}),
-    branchNameRegex = new RegExp(core.getInput('branch-name-regex', {required: true}), 'g'),
-    branchNameComment = core.getInput('branch-name-comment', {required: false});
 
-  return run(
-    atlassianToken,
-    atlassianDomain,
-    titleRegex,
-    branchNameRegex,
-    titleComment,
-    branchNameComment
-  );
+function getInput(text: string) {
+  return core.getInput(text, {required: true});
+}
+
+async function runAction() {
+  const atlassianToken = getInput('atlassian-token'),
+    atlassianDomain = getInput('atlassian-domain'),
+    titleRegex = new RegExp(getInput('title-regex'), 'g'),
+    branchNameRegex = new RegExp(getInput('branch-name-regex'), 'g');
+  return run(atlassianToken, atlassianDomain, titleRegex, branchNameRegex);
 }
 
 async function run(
   atlassianToken: string,
   atlassianDomain: string,
   titleRegex: RegExp,
-  branchNameRegex: RegExp,
-  titleComment?: string,
-  branchNameComment?: string
+  branchNameRegex: RegExp
 ) {
-  const githubToken = core.getInput('github-token', {required: true});
-  const client: github.GitHub = new github.GitHub(githubToken);
-  const pr = github.context.issue;
-
   try {
     core.info('Extracting JIRA tickets from title...');
     const ticket = getTicketFrom(
       github.context!.payload!.pull_request!.title,
       titleRegex,
-      titleComment
+      'invalid-title'
     );
+    core.setOutput('ticket', ticket);
 
     core.info('Extracting JIRA tickets from branch name...');
     const branchTicket = getTicketFrom(
       getBranchName(),
       branchNameRegex,
-      branchNameComment
+      'invalid-branch-name'
     );
 
     core.info('Verifying branch tickets and PR ticket are identical...');
     if (ticket !== branchTicket) {
+      core.setOutput('error', 'branch-ticket-differs-title-ticket');
       throw new Error(
         `branch ticket (${branchTicket}) != title ticket (${ticket})`
       );
     }
-    
+
     core.info(`Verifying that ticket ${ticket} exists in JIRA`);
     await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
 
     core.info(`Verifying that ticket ${ticket} exists in ticket body`);
     const body: string = github.context!.payload!.pull_request!.body ?? '';
     verifyTicketExistBody(body, ticket.toUpperCase());
-    
   } catch (error) {
     core.setFailed((error as Error).message);
-    if (error instanceof CommentableError) {
-      const comment = (error as CommentableError).comment;
-      await client.pulls.createReview({
-        owner: pr.owner,
-        repo: pr.repo,
-        pull_number: pr.number,
-        body: comment,
-        event: 'COMMENT'
-      });
-      core.setFailed(comment);
-    }
   }
 }
 
