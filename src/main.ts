@@ -60,7 +60,7 @@ async function verifyTicketExistsInJIRA(
 
 function verifyTicketExistBody(body: string, ticket: string) {
   const prefix = core.getInput('body-ticket-prefix', {required: false});
-  if (!body.includes(prefix)) {
+  if (!prefix) {
     return;
   }
 
