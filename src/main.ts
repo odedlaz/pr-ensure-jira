@@ -102,6 +102,7 @@ async function run(
 
     core.info('Extracting JIRA tickets from branch name...');
     const branchTicket = getTicketFrom(pr.head.ref,branchNameRegex,'invalid-branch');
+    core.setOutput('branch-ticket', branchTicket);
 
     core.info('Verifying branch tickets and PR ticket are identical...');
     if (ticket !== branchTicket) {
