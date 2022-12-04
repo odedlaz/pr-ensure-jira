@@ -52,7 +52,7 @@ async function verifyTicketExistsInJIRA(
     throw new Error(`Unknown JIRA ticket: ${ticket}`);
   }
 
-    core.setOutput('error', 'unhandled-atlassian-error');
+  core.setOutput('error', 'unhandled-atlassian-error');
   throw new Error(
     `Unhandled response from atlassian: ${await response.text()}`
   );
@@ -101,7 +101,11 @@ async function run(
     core.setOutput('ticket', ticket);
 
     core.info('Extracting JIRA tickets from branch name...');
-    const branchTicket = getTicketFrom(pr.head.ref,branchNameRegex,'invalid-branch');
+    const branchTicket = getTicketFrom(
+      pr.head.ref,
+      branchNameRegex,
+      'invalid-branch'
+    );
     core.setOutput('branch-ticket', branchTicket);
 
     core.info('Verifying branch tickets and PR ticket are identical...');
