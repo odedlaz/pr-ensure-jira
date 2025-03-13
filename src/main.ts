@@ -84,7 +84,6 @@ async function runAction() {
   return run(atlassianToken, atlassianDomain, titleRegex, branchNameRegex);
   } catch (error) {
     core.error(`internal error: ${JSON.stringify(error)}`);
-    core.setOutput('error', 'internal-error')
   }
 }
 
