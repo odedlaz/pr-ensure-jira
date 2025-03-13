@@ -79,8 +79,8 @@ async function runAction() {
   try {
     const atlassianToken = getInput('atlassian-token'),
       atlassianDomain = getInput('atlassian-domain'),
-      titleRegex = new RegExp(getInput('title-regex'), 'g'),
-      branchNameRegex = new RegExp(getInput('branch-name-regex'), 'g');
+      titleRegex = new RegExp(getInput('title-regex')),
+      branchNameRegex = new RegExp(getInput('branch-name-regex'));
     return run(atlassianToken, atlassianDomain, titleRegex, branchNameRegex);
   } catch (error) {
     core.setOutput('error', 'internal-error');
