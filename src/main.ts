@@ -121,9 +121,6 @@ async function run(
       );
     }
 
-    core.info(`Verifying that ticket ${ticket} exists in JIRA`);
-    await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
-
     core.info(`Verifying that ticket ${ticket} exists in ticket body`);
     const body: string = github.context!.payload!.pull_request!.body ?? '';
     verifyTicketExistBody(body, ticket.toUpperCase());
