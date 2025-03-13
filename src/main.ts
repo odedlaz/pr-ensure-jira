@@ -52,7 +52,7 @@ async function verifyTicketExistsInJIRA(
     throw new Error(`Unknown JIRA ticket: ${ticket}`);
   }
 
-    core.setOutput('error', 'unhandled-atlassian-error');
+  core.setOutput('error', 'unhandled-atlassian-error');
   throw new Error(
     `Unhandled response from atlassian: ${await response.text()}`
   );
@@ -76,11 +76,16 @@ function getInput(text: string) {
 }
 
 async function runAction() {
-  const atlassianToken = getInput('atlassian-token'),
-    atlassianDomain = getInput('atlassian-domain'),
-    titleRegex = new RegExp(getInput('title-regex'), 'g'),
-    branchNameRegex = new RegExp(getInput('branch-name-regex'), 'g');
-  return run(atlassianToken, atlassianDomain, titleRegex, branchNameRegex);
+  try {
+    const atlassianToken = getInput('atlassian-token'),
+      atlassianDomain = getInput('atlassian-domain'),
+      titleRegex = new RegExp(getInput('title-regex'), 'g'),
+      branchNameRegex = new RegExp(getInput('branch-name-regex'), 'g');
+    return run(atlassianToken, atlassianDomain, titleRegex, branchNameRegex);
+  } catch (error) {
+    core.setOutput('error', 'internal-error');
+    core.warning(error as Error);
+  }
 }
 
 async function run(
@@ -101,7 +106,11 @@ async function run(
     core.setOutput('ticket', ticket);
 
     core.info('Extracting JIRA tickets from branch name...');
-    const branchTicket = getTicketFrom(pr.head.ref,branchNameRegex,'invalid-branch');
+    const branchTicket = getTicketFrom(
+      pr.head.ref,
+      branchNameRegex,
+      'invalid-branch'
+    );
     core.setOutput('branch-ticket', branchTicket);
 
     core.info('Verifying branch tickets and PR ticket are identical...');
@@ -119,7 +128,7 @@ async function run(
     const body: string = github.context!.payload!.pull_request!.body ?? '';
     verifyTicketExistBody(body, ticket.toUpperCase());
   } catch (error) {
-    core.setFailed((error as Error).message);
+    core.warning(error as Error);
   }
 }
 

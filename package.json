@@ -23,9 +23,9 @@
   },
   "homepage": "https://github.com/odedlaz/pr-ensure-jira#readme",
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "@actions/github": "^1.1.0",
-    "node-fetch": "^2.6.7"
+    "@actions/core": "1.11.1",
+    "@actions/github": "6.0.0",
+    "node-fetch": "2.7.0"
   },
   "devDependencies": {
     "@types/node": "^12.12.5",
