@@ -1,6 +1,6 @@
 {
   "name": "pr-ensure-jira",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "PR Lint for GitHub Actions",
   "main": "lib/main.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "pr",
     "lint"
   ],
-  "author": "Farhad Safarov",
+  "author": "Oded Lazar",
   "license": "MPL-2.0",
   "bugs": {
     "url": "https://github.com/odedlaz/pr-ensure-jira/issues"
@@ -25,11 +25,11 @@
   "dependencies": {
     "@actions/core": "1.11.1",
     "@actions/github": "6.0.0",
-    "node-fetch": "2.7.0"
+    "node-fetch": "3.3.2"
   },
   "devDependencies": {
-    "@types/node": "^12.12.5",
-    "prettier": "^2.1.2",
-    "typescript": "^3.8.3"
+    "@types/node": "^22.13.10",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
   }
 }
