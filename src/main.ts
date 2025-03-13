@@ -83,7 +83,7 @@ async function runAction() {
     branchNameRegex = new RegExp(getInput('branch-name-regex'), 'g');
   return run(atlassianToken, atlassianDomain, titleRegex, branchNameRegex);
   } catch (error) {
-    core.error(`internal error: ${JSON.stringify(error)}`);
+    core.setFailed(JSON.stringify(error));
   }
 }
 
@@ -93,38 +93,34 @@ async function run(
   titleRegex: RegExp,
   branchNameRegex: RegExp
 ) {
-  try {
-    const pr = github.context!.payload!.pull_request;
-    if (!pr) {
-      core.error('this action only works for pull requests');
-      return;
-    }
-
-    core.info('Extracting JIRA tickets from title...');
-    const ticket = getTicketFrom(pr.title, titleRegex, 'invalid-title');
-    core.setOutput('ticket', ticket);
-
-    core.info('Extracting JIRA tickets from branch name...');
-    const branchTicket = getTicketFrom(pr.head.ref,branchNameRegex,'invalid-branch');
-    core.setOutput('branch-ticket', branchTicket);
-
-    core.info('Verifying branch tickets and PR ticket are identical...');
-    if (ticket !== branchTicket) {
-      core.setOutput('error', 'branch-ticket-differs-title-ticket');
-      throw new Error(
-        `branch ticket (${branchTicket}) != title ticket (${ticket})`
-      );
-    }
-
-    core.info(`Verifying that ticket ${ticket} exists in JIRA`);
-    await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
-
-    core.info(`Verifying that ticket ${ticket} exists in ticket body`);
-    const body: string = github.context!.payload!.pull_request!.body ?? '';
-    verifyTicketExistBody(body, ticket.toUpperCase());
-  } catch (error) {
-    core.setFailed((error as Error).message);
+  const pr = github.context!.payload!.pull_request;
+  if (!pr) {
+    core.error('this action only works for pull requests');
+    return;
   }
+
+  core.info('Extracting JIRA tickets from title...');
+  const ticket = getTicketFrom(pr.title, titleRegex, 'invalid-title');
+  core.setOutput('ticket', ticket);
+
+  core.info('Extracting JIRA tickets from branch name...');
+  const branchTicket = getTicketFrom(pr.head.ref,branchNameRegex,'invalid-branch');
+  core.setOutput('branch-ticket', branchTicket);
+
+  core.info('Verifying branch tickets and PR ticket are identical...');
+  if (ticket !== branchTicket) {
+    core.setOutput('error', 'branch-ticket-differs-title-ticket');
+    throw new Error(
+      `branch ticket (${branchTicket}) != title ticket (${ticket})`
+    );
+  }
+
+  core.info(`Verifying that ticket ${ticket} exists in JIRA`);
+  await verifyTicketExistsInJIRA(ticket, atlassianDomain, atlassianToken);
+
+  core.info(`Verifying that ticket ${ticket} exists in ticket body`);
+  const body: string = github.context!.payload!.pull_request!.body ?? '';
+  verifyTicketExistBody(body, ticket.toUpperCase());
 }
 
 runAction();
